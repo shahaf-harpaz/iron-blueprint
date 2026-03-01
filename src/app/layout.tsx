@@ -45,7 +45,7 @@ function Sidebar() {
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient()
-    supabase.auth.getUser().then(({ data }) => setUser(data.user))
+    supabase.auth.getUser().then(({ data }: { data: any }) => setUser(data.user))
   }, [])
 
   const toggleTheme = () => {

@@ -28,9 +28,9 @@ export default async function AnalyticsPage() {
 
   return (
     <AnalyticsDashboard
-      allSets={allSets ?? []}
+      allSets={(allSets ?? []) as any}
       allLogs={allLogs ?? []}
-      exercises={exercises ?? []}
+      exercises={(exercises ?? []) as any}
     />
   )
 }

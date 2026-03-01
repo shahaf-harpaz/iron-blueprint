@@ -268,7 +268,7 @@ function ExerciseAccordion({
           .single()
         if (logErr) throw new Error(`Could not start workout log: ${logErr.message}`)
         currentLogId = newLog.id
-        onLogIdCreated(currentLogId)
+        onLogIdCreated(currentLogId!)
       }
 
       const { error: setErr } = await supabase

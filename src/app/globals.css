@@ -309,7 +309,13 @@ body.light-mode [data-no-invert] {
 
 /* ── MOBILE ──────────────────────────────────────────────────── */
 @media (max-width: 768px) {
+  .sidebar { display: none; }
   main {
-    padding: 24px 16px !important;
+    margin-left: 0 !important;
+    padding: 24px 16px 80px !important;
   }
+  .mobile-dock { display: flex !important; }
+}
+@media (min-width: 769px) {
+  .mobile-dock { display: none; }
 }

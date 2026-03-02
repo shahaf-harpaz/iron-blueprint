@@ -105,7 +105,7 @@ export default async function Dashboard() {
     // ── 3. Last performance for all exercises in one query ──────────────────
     const allExerciseIds = Object.values(exercisesByTemplate).flat().map((e) => e.id)
     if (allExerciseIds.length > 0) {
-      const { data: perfRows } = await supabase
+      const { data: perfRows, error: perfError } = await supabase
         .from('set_entries')
         .select('exercise_id, set_number, weight, reps, created_at')
         .in('exercise_id', allExerciseIds)
@@ -113,9 +113,9 @@ export default async function Dashboard() {
         .order('created_at', { ascending: false })
         .limit(500)
 
+      console.log('perfError:', JSON.stringify(perfError))
       console.log('perfRows count:', perfRows?.length)
-      console.log('perfRows sample:', JSON.stringify(perfRows?.slice(0, 3)))
-      console.log('lastPerfBySet keys:', Object.keys(lastPerfBySet))
+      console.log('allExerciseIds:', allExerciseIds)
 
       for (const row of (perfRows ?? []) as any[]) {
         const exId   = row.exercise_id

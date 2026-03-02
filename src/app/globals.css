@@ -307,17 +307,9 @@ body.light-mode [data-no-invert] {
   filter: invert(1) hue-rotate(180deg);
 }
 
-/* ── MOBILE DOCK ─────────────────────────────────────────────── */
+/* ── MOBILE ──────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .sidebar { display: none; }
   main {
-    margin-left: 0 !important;
-    padding: 24px 16px 80px !important;
+    padding: 24px 16px !important;
   }
-  .mobile-dock {
-    display: flex !important;
-  }
-}
-@media (min-width: 769px) {
-  .mobile-dock { display: none; }
 }

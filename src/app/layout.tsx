@@ -191,30 +191,28 @@ function MobileDock() {
   return (
     <nav style={{
       display: 'none',
-      position: 'fixed', bottom: 0, left: 0, right: 0,
-      height: 64,
-      backdropFilter: 'blur(20px) saturate(180%)',
-      WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-      background: 'rgba(8,8,8,0.95)',
-      borderTop: `1px solid ${C.border}`,
-      zIndex: 50,
+      position: 'fixed', bottom: 24,
+      left: '50%', transform: 'translateX(-50%)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      background: 'rgba(20,20,20,0.95)',
+      border: '1px solid rgba(255,255,255,0.1)',
+      borderRadius: 999,
+      padding: '10px 24px',
+      gap: 32,
+      zIndex: 100,
       alignItems: 'center',
-      justifyContent: 'space-around',
-      padding: '0 8px',
     }} className="mobile-dock">
       {NAV.map(({ href, label, icon }) => {
         const active = isActive(href)
         return (
-          <Link key={href} href={href} style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center',
-            justifyContent: 'center', gap: 3,
-            flex: 1, height: '100%',
-            color: active ? C.accent : C.dim,
+          <Link key={href} href={href} title={label} style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: active ? C.accent : 'rgba(255,255,255,0.35)',
             textDecoration: 'none',
             transition: 'color 0.15s',
           }}>
             {icon}
-            <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.04em' }}>{label}</span>
           </Link>
         )
       })}

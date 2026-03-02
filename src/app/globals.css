@@ -308,14 +308,15 @@ body.light-mode [data-no-invert] {
 }
 
 /* ── MOBILE ──────────────────────────────────────────────────── */
-@media (max-width: 768px) {
-  .sidebar { display: none; }
+@media (max-width: 767px) {
+  .sidebar { display: none !important; }
   main {
     margin-left: 0 !important;
-    padding: 24px 16px 80px !important;
+    width: 100% !important;
+    padding: 24px 16px 100px !important;
   }
   .mobile-dock { display: flex !important; }
 }
-@media (min-width: 769px) {
-  .mobile-dock { display: none; }
+@media (min-width: 768px) {
+  .mobile-dock { display: none !important; }
 }

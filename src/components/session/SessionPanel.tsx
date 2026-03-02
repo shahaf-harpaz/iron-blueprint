@@ -62,9 +62,20 @@ function RestTimer({
           from { transform: translateY(16px) scale(0.96); opacity: 0; }
           to   { transform: translateY(0)    scale(1);    opacity: 1; }
         }
+        @media (max-width: 767px) {
+          .rest-timer-float {
+            bottom: auto !important;
+            right: auto !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            width: calc(100vw - 48px) !important;
+            max-width: 320px !important;
+          }
+        }
       `}</style>
-      <div style={{
-        position: 'fixed', bottom: 24, right: 24, zIndex: 100,
+      <div className="rest-timer-float" style={{
+        position: 'fixed', bottom: 24, right: 24, zIndex: 999,
         backdropFilter: 'blur(60px) saturate(200%)',
         WebkitBackdropFilter: 'blur(60px) saturate(200%)',
         background: 'rgba(200,255,0,0.10)',

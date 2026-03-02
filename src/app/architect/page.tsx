@@ -293,6 +293,8 @@ function ExercisesTab() {
     setAddSaving(true)
     setAddError(null)
     const supabase = getSupabaseBrowserClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setAddError('Not signed in'); setAddSaving(false); return }
     const { error } = await supabase.from('exercises').insert({
       name:               form.name,
       muscle_group:       form.muscle_group,
@@ -300,6 +302,7 @@ function ExercisesTab() {
       tempo_instruction:  form.tempo_instruction,
       technical_notes:    form.technical_notes,
       default_sets:       newDefaultSets,
+      user_id:            user.id,
     })
     if (error) {
       setAddError(error.message)

@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import { PageTransition } from '@/components/ui/PageTransition'
-import { ResetLogsModal } from '@/components/ui/ResetLogsModal'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -43,7 +42,6 @@ function Sidebar() {
   const router   = useRouter()
   const [user, setUser]         = useState<any>(null)
   const [lightMode, setLightMode] = useState(false)
-  const [showReset, setShowReset] = useState(false)
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient()
@@ -74,12 +72,6 @@ function Sidebar() {
   }
 
   return (
-    <>
-    <ResetLogsModal
-      isOpen={showReset}
-      onClose={() => setShowReset(false)}
-      onSuccess={() => window.location.reload()}
-    />
     <aside style={{
       position: 'fixed', left: 0, top: 0, bottom: 0, width: 64,
       display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -171,17 +163,6 @@ function Sidebar() {
           )}
         </div>
 
-        {/* Reset logs */}
-        <button
-          type="button"
-          onClick={() => setShowReset(true)}
-          title="Reset logs"
-          style={{
-            fontSize: 11, color: 'rgba(255,255,255,0.3)',
-            background: 'transparent', border: 'none', cursor: 'pointer',
-          }}
-        >Reset logs</button>
-
         {/* Sign-out */}
         <button
           type="button"
@@ -199,7 +180,6 @@ function Sidebar() {
         </button>
       </div>
     </aside>
-    </>
   )
 }
 

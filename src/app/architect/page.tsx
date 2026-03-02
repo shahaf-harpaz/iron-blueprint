@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
+import { ResetLogsModal } from '@/components/ui/ResetLogsModal'
 
 // ─── TOKENS ───────────────────────────────────────────────────────────────────
 const C = {
@@ -725,6 +726,7 @@ function ProgramTab() {
 // ─── ARCHITECT PAGE ───────────────────────────────────────────────────────────
 export default function ArchitectPage() {
   const [tab, setTab] = useState<'days' | 'exercises' | 'program'>('days')
+  const [showReset, setShowReset] = useState(false)
 
   const tabs: { id: 'days' | 'exercises' | 'program'; label: string }[] = [
     { id: 'days',      label: 'Days' },
@@ -767,6 +769,19 @@ export default function ArchitectPage() {
       {tab === 'days'      && <DaysTab />}
       {tab === 'exercises' && <ExercisesTab />}
       {tab === 'program'   && <ProgramTab />}
+
+      <ResetLogsModal
+        isOpen={showReset}
+        onClose={() => setShowReset(false)}
+        onSuccess={() => window.location.reload()}
+      />
+      <div style={{ padding: '24px', textAlign: 'center' }}>
+        <button onClick={() => setShowReset(true)} style={{
+          fontSize: 12, color: 'rgba(255,255,255,0.3)',
+          background: 'transparent', border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: 8, padding: '8px 16px', cursor: 'pointer',
+        }}>Reset logs</button>
+      </div>
     </div>
   )
 }

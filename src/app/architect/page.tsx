@@ -48,21 +48,24 @@ function DaysTab() {
   }>>({})
 
   useEffect(() => {
-    const supabase = getSupabaseBrowserClient()
-    supabase
-      .from('workout_templates')
-      .select('id, day_number, name, description')
-      .order('day_number')
-      .then(({ data }: { data: any[] | null }) => {
-        if (data) {
-          setTemplates(data)
-          const init: typeof editState = {}
-          for (const t of data) {
-            init[t.id] = { name: t.name ?? '', desc: t.description ?? '', saving: false, saved: false, error: null }
-          }
-          setEditState(init)
+    ;(async () => {
+      const supabase = getSupabaseBrowserClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data } = await supabase
+        .from('workout_templates')
+        .select('id, day_number, name, description')
+        .eq('user_id', user.id)
+        .order('day_number')
+      if (data) {
+        setTemplates(data)
+        const init: typeof editState = {}
+        for (const t of data) {
+          init[t.id] = { name: t.name ?? '', desc: t.description ?? '', saving: false, saved: false, error: null }
         }
-      })
+        setEditState(init)
+      }
+    })()
   }, [])
 
   const save = async (id: string) => {
@@ -585,14 +588,17 @@ function ProgramTab() {
   const [opError, setOpError]                       = useState<string | null>(null)
 
   useEffect(() => {
-    const supabase = getSupabaseBrowserClient()
-    Promise.all([
-      supabase.from('workout_templates').select('id, day_number, name').order('day_number'),
-      supabase.from('exercises').select('id, name, muscle_group, default_sets').order('name'),
-    ]).then(([{ data: tData }, { data: eData }]) => {
+    ;(async () => {
+      const supabase = getSupabaseBrowserClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const [{ data: tData }, { data: eData }] = await Promise.all([
+        supabase.from('workout_templates').select('id, day_number, name').eq('user_id', user.id).order('day_number'),
+        supabase.from('exercises').select('id, name, muscle_group, default_sets').order('name'),
+      ])
       if (tData) setTemplates(tData)
       if (eData) setAllExercises(eData)
-    })
+    })()
   }, [])
 
   const fetchTemplateExercises = async (templateId: string) => {
@@ -644,6 +650,8 @@ function ProgramTab() {
     if (!selectedTemplateId) return
     setOpError(null)
     const supabase = getSupabaseBrowserClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setOpError('Not signed in'); return }
     const { error } = await supabase.from('template_exercises').insert({
       template_id:     selectedTemplateId,
       exercise_id:     exercise.id,
@@ -652,6 +660,7 @@ function ProgramTab() {
       target_reps:     '8-10',
       target_reps_min: 8,
       target_reps_max: 10,
+      user_id:         user.id,
     })
     if (error) {
       setOpError(error.message)

@@ -70,6 +70,7 @@ export default async function Dashboard() {
   const { data: rawTemplates, error: templatesError } = await supabase
     .from('workout_templates')
     .select('id, name, description, day_number')
+    .eq('user_id', user.id)
     .order('day_number', { ascending: true })
 
   const templateLoadError = !!templatesError
@@ -85,6 +86,7 @@ export default async function Dashboard() {
       .from('template_exercises')
       .select('template_id, position, exercise_id, target_sets, target_reps, exercises(id, name, muscle_group, tempo_instruction, technical_notes, default_sets)')
       .in('template_id', templateIds)
+      .eq('user_id', user.id)
       .order('position')
 
     for (const row of (teRows ?? []) as any[]) {

@@ -113,6 +113,10 @@ export default async function Dashboard() {
         .order('created_at', { ascending: false })
         .limit(500)
 
+      console.log('perfRows count:', perfRows?.length)
+      console.log('perfRows sample:', JSON.stringify(perfRows?.slice(0, 3)))
+      console.log('lastPerfBySet keys:', Object.keys(lastPerfBySet))
+
       for (const row of (perfRows ?? []) as any[]) {
         const exId   = row.exercise_id
         const setNum = row.set_number ?? 1

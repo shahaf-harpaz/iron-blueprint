@@ -430,7 +430,7 @@ function ImprovementCards({ allSets }: { allSets: SetEntry[] }) {
       const sorted = [...sets].sort(
         (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
       )
-      const days = [...new Set(sorted.map(s => s.created_at.split('T')[0]))]
+      const days = [...new Set(sorted.map(s => new Date(s.created_at).toLocaleDateString('en-CA')))]
       if (days.length < 2) return null
 
       const firstDaySets = sorted.filter(s => s.created_at.startsWith(days[0]))
@@ -563,11 +563,11 @@ function Heatmap({ allSets }: { allSets: SetEntry[] }) {
   const days  = Array.from({ length: 84 }, (_, i) => {
     const d = new Date(today)
     d.setDate(d.getDate() - (83 - i))
-    return d.toISOString().split('T')[0]
+    return d.toLocaleDateString('en-CA')
   })
 
   const setsByDay = allSets.reduce((acc, s) => {
-    const day = s.created_at.split('T')[0]
+    const day = new Date(s.created_at).toLocaleDateString('en-CA')
     acc[day] = (acc[day] || 0) + 1
     return acc
   }, {} as Record<string, number>)

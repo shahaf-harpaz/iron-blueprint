@@ -258,9 +258,10 @@ function ExercisesTab() {
     name: '', muscle_group: '', target_muscle: '', tempo_instruction: '', technical_notes: '',
   })
   const [newDefaultSets, setNewDefaultSets] = useState(3)
-  const [addSaving, setAddSaving]   = useState(false)
-  const [addError, setAddError]     = useState<string | null>(null)
-  const [addSuccess, setAddSuccess] = useState(false)
+  const [addSaving, setAddSaving]       = useState(false)
+  const [addError, setAddError]         = useState<string | null>(null)
+  const [addSuccess, setAddSuccess]     = useState(false)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   const fetchExercises = async () => {
     const supabase = getSupabaseBrowserClient()
@@ -278,6 +279,14 @@ function ExercisesTab() {
   const filtered = exercises.filter(e =>
     e.name?.toLowerCase().includes(q) || e.muscle_group?.toLowerCase().includes(q)
   )
+
+  const handleDelete = async (id: string) => {
+    const supabase = getSupabaseBrowserClient()
+    await supabase.from('template_exercises').delete().eq('exercise_id', id)
+    await supabase.from('exercises').delete().eq('id', id)
+    setConfirmDeleteId(null)
+    fetchExercises()
+  }
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -418,19 +427,54 @@ function ExercisesTab() {
                   {ex.tempo_instruction}
                 </span>
               )}
-              <button
-                type="button"
-                onClick={() => setEditingId(editingId === ex.id ? null : ex.id)}
-                style={{
-                  padding: '4px 12px', borderRadius: 8, fontSize: 10, fontWeight: 700,
-                  background: editingId === ex.id ? 'rgba(200,255,0,0.10)' : 'rgba(255,255,255,0.06)',
-                  border: `1px solid ${editingId === ex.id ? 'rgba(200,255,0,0.28)' : 'rgba(255,255,255,0.10)'}`,
-                  color: editingId === ex.id ? '#C8FF00' : 'rgba(255,255,255,0.5)',
-                  cursor: 'pointer',
-                }}
-              >
-                {editingId === ex.id ? 'Cancel' : 'Edit'}
-              </button>
+              {confirmDeleteId === ex.id ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 10, color: '#F87171', fontWeight: 600 }}>Sure?</span>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(ex.id)}
+                    style={{
+                      padding: '4px 10px', borderRadius: 8, fontSize: 10, fontWeight: 700,
+                      background: 'rgba(248,113,113,0.15)', border: '1px solid rgba(248,113,113,0.4)',
+                      color: '#F87171', cursor: 'pointer',
+                    }}
+                  >Yes</button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDeleteId(null)}
+                    style={{
+                      padding: '4px 10px', borderRadius: 8, fontSize: 10, fontWeight: 700,
+                      background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)',
+                      color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
+                    }}
+                  >No</button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button
+                    type="button"
+                    onClick={() => setEditingId(editingId === ex.id ? null : ex.id)}
+                    style={{
+                      padding: '4px 12px', borderRadius: 8, fontSize: 10, fontWeight: 700,
+                      background: editingId === ex.id ? 'rgba(200,255,0,0.10)' : 'rgba(255,255,255,0.06)',
+                      border: `1px solid ${editingId === ex.id ? 'rgba(200,255,0,0.28)' : 'rgba(255,255,255,0.10)'}`,
+                      color: editingId === ex.id ? '#C8FF00' : 'rgba(255,255,255,0.5)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {editingId === ex.id ? 'Cancel' : 'Edit'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setEditingId(null); setConfirmDeleteId(ex.id) }}
+                    style={{
+                      padding: '4px 12px', borderRadius: 8, fontSize: 10, fontWeight: 700,
+                      background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.3)',
+                      color: '#F87171', cursor: 'pointer',
+                    }}
+                  >Delete</button>
+                </div>
+              )}
             </div>
 
             {/* Inline edit form — only shown when editing */}

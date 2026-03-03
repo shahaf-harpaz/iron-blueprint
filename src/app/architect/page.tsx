@@ -288,8 +288,10 @@ function ExercisesTab() {
 
   const handleDelete = async (id: string) => {
     const supabase = getSupabaseBrowserClient()
-    await supabase.from('template_exercises').delete().eq('exercise_id', id)
-    await supabase.from('exercises').delete().eq('id', id)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    await supabase.from('template_exercises').delete().eq('exercise_id', id).eq('user_id', user.id)
+    await supabase.from('exercises').delete().eq('id', id).eq('user_id', user.id)
     setConfirmDeleteId(null)
     fetchExercises()
   }
@@ -606,10 +608,13 @@ function ProgramTab() {
 
   const fetchTemplateExercises = async (templateId: string) => {
     const supabase = getSupabaseBrowserClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
     const { data } = await supabase
       .from('template_exercises')
       .select('id, position, target_sets, target_reps, exercises(id, name, muscle_group)')
       .eq('template_id', templateId)
+      .eq('user_id', user.id)
       .order('position')
     if (data) setTemplateExercises(data)
   }

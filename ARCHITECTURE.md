@@ -134,7 +134,9 @@ src/
 │   ├── supabase.ts             Legacy singleton (used by server pages directly)
 │   ├── supabase/
 │   │   ├── client.ts           Browser singleton via @supabase/ssr
-│   │   └── server.ts           Server Component client via @supabase/ssr + cookies
+│   │   ├── server.ts           Server Component client via @supabase/ssr + cookies
+│   │   └── admin.ts            Service-role client — bypasses RLS, server-only
+│   ├── seedUser.ts             Seeds default program (exercises + templates) for new users — idempotent
 │   └── utils/
 │       ├── clean.ts            Strip [cite:xx] artifacts from description strings
 │       ├── cn.ts               clsx + tailwind-merge helper
@@ -142,6 +144,8 @@ src/
 │       └── volume.ts           Total volume calculation: sets × reps × weight
 │
 ├── middleware.ts               Session refresh on every request (Supabase SSR)
+├── scripts/
+│   └── backfillUsers.ts        One-time script — seeds default program for existing users with no data
 └── types/                      (add database.ts here after: supabase gen types)
 ```
 
@@ -229,6 +233,7 @@ lastPerfByExercise built server-side from set_entries newest-first
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | client + server | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | client + server | Public anon key (safe to expose) |
+| `SUPABASE_SERVICE_ROLE_KEY` | server-only (`admin.ts`) | Service-role key — bypasses RLS. Never expose to browser. |
 
 Never use the `service_role` key in client-side code.
 
@@ -254,3 +259,4 @@ Never use the `service_role` key in client-side code.
 | 2026-03-01 | Fixed Recent Sessions set count (match by log_id not date); fixed dark/light mode using CSS filter body class instead of CSS variables | AnalyticsDashboard.tsx, analytics/page.tsx, globals.css, layout.tsx |
 | 2026-03-01 | CRITICAL: Fixed page.tsx using unauthenticated supabase client — switched to getSupabaseServerClient() with auth guard + user_id filter on set_entries; analytics Recent Sessions now shows per-exercise breakdown with sets + volume | src/app/page.tsx, analytics/page.tsx, AnalyticsDashboard.tsx |
 | 2026-03-03 | Fixed data scoping bug: exercises queries in Architect (ExercisesTab + ProgramTab) were missing .eq('user_id', user.id), leaking all users' exercises across accounts | architect/page.tsx |
+| 2026-03-03 | New user seeding: admin client, seedUser() called from auth callback (idempotent), backfill script; email in delete modal + avatar hover tooltip | admin.ts, seedUser.ts, auth/callback/route.ts, scripts/backfillUsers.ts, layout.tsx |

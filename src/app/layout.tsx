@@ -41,10 +41,11 @@ const NAV = [
 function Sidebar() {
   const pathname = usePathname()
   const router   = useRouter()
-  const [user, setUser]           = useState<any>(null)
-  const [lightMode, setLightMode] = useState(false)
-  const [deleteStep, setDeleteStep] = useState<'idle' | 'confirm' | 'deleting'>('idle')
+  const [user, setUser]               = useState<any>(null)
+  const [lightMode, setLightMode]     = useState(false)
+  const [deleteStep, setDeleteStep]   = useState<'idle' | 'confirm' | 'deleting'>('idle')
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [showAvatarTip, setShowAvatarTip] = useState(false)
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient()
@@ -161,7 +162,23 @@ function Sidebar() {
         </button>
 
         {/* User avatar */}
-        <div style={{ width: 42, height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div
+          style={{ position: 'relative', width: 42, height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onMouseEnter={() => setShowAvatarTip(true)}
+          onMouseLeave={() => setShowAvatarTip(false)}
+        >
+          {showAvatarTip && user?.email && (
+            <div style={{
+              position: 'absolute', left: 48, top: '50%', transform: 'translateY(-50%)',
+              background: 'rgba(0,0,0,0.88)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              borderRadius: 8, padding: '5px 10px',
+              fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.75)',
+              whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 200,
+            }}>
+              {user.email}
+            </div>
+          )}
           {avatarUrl ? (
             <img
               src={avatarUrl}
@@ -249,7 +266,7 @@ function Sidebar() {
               Delete Account
             </div>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6 }}>
-              Are you sure? This cannot be undone. All your workouts, exercises, and training history will be permanently deleted.
+              Are you sure? This cannot be undone. The account <span style={{ color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>{user?.email}</span> and all your workouts, exercises, and training history will be permanently deleted.
             </div>
           </div>
 

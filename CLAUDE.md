@@ -57,7 +57,9 @@ src/
 ├── lib/
 │   ├── supabase/
 │   │   ├── client.ts           Browser singleton — getSupabaseBrowserClient()
-│   │   └── server.ts           Server client — getSupabaseServerClient()
+│   │   ├── server.ts           Server client — getSupabaseServerClient()
+│   │   └── admin.ts            Service-role client — getSupabaseAdminClient() — bypasses RLS, server-only
+│   ├── seedUser.ts             seedUser(userId) — seeds default exercises/templates for new users
 │   ├── supabase.ts             LEGACY SINGLETON — do not use in new code
 │   └── utils/
 │       ├── clean.ts            Strip [cite:xx] artifacts from description strings
@@ -161,6 +163,7 @@ One row per user per day. Managed by `useNutrition` hook.
 |---|---|---|
 | `'use client'` components | `getSupabaseBrowserClient()` from `@/lib/supabase/client` | Browser singleton, prevents duplicate GoTrue instances |
 | Server Components, Route Handlers | `getSupabaseServerClient()` from `@/lib/supabase/server` | Async, reads cookies for session |
+| Server-only, bypasses RLS | `getSupabaseAdminClient()` from `@/lib/supabase/admin` | Uses `SUPABASE_SERVICE_ROLE_KEY` — never call from client code |
 | Middleware | Inline `createServerClient` | Already set up correctly in middleware.ts |
 
 **Never use** `import { supabase } from '@/lib/supabase'` (the legacy singleton) in new code. It bypasses auth and RLS. It still exists in `test-backend/page.tsx` and `workout/[id]/page.tsx` (legacy) but should not be extended.
@@ -197,8 +200,8 @@ workout_templates (1)
 ```
 When building the home page data: fetch templates by user_id, then fetch template_exercises `.in('template_id', templateIds).eq('user_id', user.id)`, then build `exercisesByTemplate` map.
 
-### seed_new_user trigger
-A Supabase database trigger runs on `auth.users` insert (new signup) and seeds `workout_templates` rows for the user. This is why templates exist immediately after signup without any UI action.
+### New user seeding
+On every OAuth/email callback (`auth/callback/route.ts`), `seedUser(user.id)` is called after `exchangeCodeForSession`. `seedUser` checks if the user already has templates (idempotent — safe to call on every login) and inserts the default program if not. The default data lives as plain TypeScript consts at the top of `src/lib/seedUser.ts` under the `EDIT DEFAULT PROGRAM HERE` comment — edit those arrays to change what new users get. To seed existing users who signed up before this was added, run: `npx ts-node --require dotenv/config src/scripts/backfillUsers.ts`
 
 ### Styling conventions
 - All session components use **inline styles only** with a `C` token object defined at the top of each file (no Tailwind classes)
@@ -223,3 +226,6 @@ Use `toLocaleDateString('en-CA')` for `YYYY-MM-DD` local dates — NOT `toISOStr
 - **`layout.tsx` is `'use client'`** — Required because it uses `usePathname` and `useRouter` for the sidebar active state. This means it cannot be an async Server Component.
 - **`exercises` query in `architect/page.tsx` must filter by `user_id`** — both `ExercisesTab.fetchExercises()` and `ProgramTab` useEffect fetch from the `exercises` table. Missing `.eq('user_id', user.id)` causes all users' exercises to leak across accounts. RLS alone is not sufficient when using the browser client before auth resolves, so always call `supabase.auth.getUser()` first and filter explicitly.
 - **Legacy files** — `workout/[id]/page.tsx` and `test-backend/page.tsx` use the legacy `supabase` singleton. Do not model new code after them.
+- **Admin client is server-only** — `getSupabaseAdminClient()` uses `SUPABASE_SERVICE_ROLE_KEY` which bypasses RLS. Never import `admin.ts` from a `'use client'` component or any file that runs in the browser.
+- **`seedUser` is idempotent** — it checks if the user has any templates before inserting. Safe to call on every OAuth callback. Failures are caught and non-fatal — they never block login.
+- **Editing the default program** — change the `DEFAULT_EXERCISES`, `DEFAULT_TEMPLATES`, `DEFAULT_TEMPLATE_EXERCISES` consts at the top of `src/lib/seedUser.ts`. These arrays are the single source of truth for what new users see on first login.

@@ -206,7 +206,7 @@ function Sidebar() {
           style={{
             width: 36, height: 36, borderRadius: 10, border: 'none',
             background: 'transparent', cursor: 'pointer',
-            color: 'rgba(255,255,255,0.25)',
+            color: 'rgba(255,255,255,0.7)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 14, transition: 'color 0.15s',
           }}
@@ -222,7 +222,7 @@ function Sidebar() {
           style={{
             width: 36, height: 36, borderRadius: 10, border: 'none',
             background: 'transparent', cursor: 'pointer',
-            color: 'rgba(248,113,113,0.35)',
+            color: '#F87171',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transition: 'color 0.15s',
           }}

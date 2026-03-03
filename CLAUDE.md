@@ -221,4 +221,5 @@ Use `toLocaleDateString('en-CA')` for `YYYY-MM-DD` local dates — NOT `toISOStr
 - **`force-dynamic` on home page** — `export const dynamic = 'force-dynamic'` is set in `page.tsx` to prevent stale cached data from Next.js static prerender.
 - **`// @ts-nocheck` in analytics** — `analytics/page.tsx` uses `// @ts-nocheck` at the top to suppress type mismatches between server and client prop shapes. Don't add more; fix types instead.
 - **`layout.tsx` is `'use client'`** — Required because it uses `usePathname` and `useRouter` for the sidebar active state. This means it cannot be an async Server Component.
+- **`exercises` query in `architect/page.tsx` must filter by `user_id`** — both `ExercisesTab.fetchExercises()` and `ProgramTab` useEffect fetch from the `exercises` table. Missing `.eq('user_id', user.id)` causes all users' exercises to leak across accounts. RLS alone is not sufficient when using the browser client before auth resolves, so always call `supabase.auth.getUser()` first and filter explicitly.
 - **Legacy files** — `workout/[id]/page.tsx` and `test-backend/page.tsx` use the legacy `supabase` singleton. Do not model new code after them.

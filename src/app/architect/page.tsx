@@ -268,9 +268,12 @@ function ExercisesTab() {
 
   const fetchExercises = async () => {
     const supabase = getSupabaseBrowserClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
     const { data } = await supabase
       .from('exercises')
       .select('*')
+      .eq('user_id', user.id)
       .order('muscle_group')
       .order('name')
     if (data) setExercises(data)
@@ -594,7 +597,7 @@ function ProgramTab() {
       if (!user) return
       const [{ data: tData }, { data: eData }] = await Promise.all([
         supabase.from('workout_templates').select('id, day_number, name').eq('user_id', user.id).order('day_number'),
-        supabase.from('exercises').select('id, name, muscle_group, default_sets').order('name'),
+        supabase.from('exercises').select('id, name, muscle_group, default_sets').eq('user_id', user.id).order('name'),
       ])
       if (tData) setTemplates(tData)
       if (eData) setAllExercises(eData)

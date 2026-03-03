@@ -212,6 +212,7 @@ lastPerfByExercise built server-side from set_entries newest-first
 - **Supabase client rule:** Use `getSupabaseBrowserClient()` in Client Components, `getSupabaseServerClient()` in Server Components, and the legacy `supabase` singleton only in existing server pages until refactored
 - **Error handling:** Never show a blank/empty state silently — always render a red inline error message with the specific reason
 - **Styling:** No Tailwind classes in session components — all inline styles using the `C` token object defined at the top of each file. Glass effect = `backdropFilter: 'blur(20px) saturate(160%)'` + `background: rgba(255,255,255,0.04)` + `border: 1px solid rgba(255,255,255,0.08)`
+- **All table queries must filter by `user_id`** — every `select()` from any table must include `.eq('user_id', user.id)`. Omitting this causes data from other users to leak into the current user's view. RLS alone is not a reliable guard in the browser client because auth state may not have resolved at query time.
 
 ---
 
@@ -252,3 +253,4 @@ Never use the `service_role` key in client-side code.
 | 2026-03-01 | App-level set count (inline editor + auto-populate from default_sets + priority chain); per-set last performance pre-fill with hints; page transition animation; active nav highlight; dark/light toggle; suppressHydrationWarning | architect/page.tsx, SessionPanel.tsx, WeeklyProgram.tsx, page.tsx, layout.tsx, globals.css, PageTransition.tsx |
 | 2026-03-01 | Fixed Recent Sessions set count (match by log_id not date); fixed dark/light mode using CSS filter body class instead of CSS variables | AnalyticsDashboard.tsx, analytics/page.tsx, globals.css, layout.tsx |
 | 2026-03-01 | CRITICAL: Fixed page.tsx using unauthenticated supabase client — switched to getSupabaseServerClient() with auth guard + user_id filter on set_entries; analytics Recent Sessions now shows per-exercise breakdown with sets + volume | src/app/page.tsx, analytics/page.tsx, AnalyticsDashboard.tsx |
+| 2026-03-03 | Fixed data scoping bug: exercises queries in Architect (ExercisesTab + ProgramTab) were missing .eq('user_id', user.id), leaking all users' exercises across accounts | architect/page.tsx |

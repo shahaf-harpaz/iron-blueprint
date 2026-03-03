@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import { PageTransition } from '@/components/ui/PageTransition'
+import { deleteAccount } from '@/app/actions/deleteAccount'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -40,8 +41,10 @@ const NAV = [
 function Sidebar() {
   const pathname = usePathname()
   const router   = useRouter()
-  const [user, setUser]         = useState<any>(null)
+  const [user, setUser]           = useState<any>(null)
   const [lightMode, setLightMode] = useState(false)
+  const [deleteStep, setDeleteStep] = useState<'idle' | 'confirm' | 'deleting'>('idle')
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient()
@@ -71,7 +74,22 @@ function Sidebar() {
     router.push('/login')
   }
 
+  const handleDeleteAccount = async () => {
+    setDeleteStep('deleting')
+    setDeleteError(null)
+    try {
+      await deleteAccount()
+      const supabase = getSupabaseBrowserClient()
+      await supabase.auth.signOut()
+      router.push('/login')
+    } catch (err: any) {
+      setDeleteError(err.message ?? 'Failed to delete account')
+      setDeleteStep('confirm')
+    }
+  }
+
   return (
+    <>
     <aside style={{
       position: 'fixed', left: 0, top: 0, bottom: 0, width: 64,
       display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -178,8 +196,111 @@ function Sidebar() {
         >
           ↪
         </button>
+
+        {/* Delete account */}
+        <button
+          type="button"
+          onClick={() => setDeleteStep('confirm')}
+          title="Delete account"
+          style={{
+            width: 36, height: 36, borderRadius: 10, border: 'none',
+            background: 'transparent', cursor: 'pointer',
+            color: 'rgba(248,113,113,0.35)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'color 0.15s',
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            <path d="M10 11v6"/><path d="M14 11v6"/>
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+          </svg>
+        </button>
       </div>
     </aside>
+
+    {/* Delete account confirmation modal */}
+    {deleteStep !== 'idle' && (
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 200,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'rgba(0,0,0,0.65)',
+        backdropFilter: 'blur(4px)',
+        WebkitBackdropFilter: 'blur(4px)',
+      }}>
+        <div style={{
+          background: 'rgba(10,10,10,0.98)',
+          border: '1px solid rgba(255,255,255,0.10)',
+          borderRadius: 20,
+          padding: 24,
+          width: 'calc(100vw - 40px)',
+          maxWidth: 360,
+          boxShadow: '0 24px 48px rgba(0,0,0,0.6)',
+        }}>
+          <div style={{
+            background: 'rgba(248,113,113,0.08)',
+            border: '1px solid rgba(248,113,113,0.3)',
+            borderRadius: 12,
+            padding: 16,
+            marginBottom: 16,
+          }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#F87171', marginBottom: 6 }}>
+              Delete Account
+            </div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6 }}>
+              Are you sure? This cannot be undone. All your workouts, exercises, and training history will be permanently deleted.
+            </div>
+          </div>
+
+          {deleteError && (
+            <div style={{
+              fontSize: 11, color: '#F87171', fontWeight: 600,
+              marginBottom: 12, padding: '8px 12px',
+              background: 'rgba(248,113,113,0.08)',
+              border: '1px solid rgba(248,113,113,0.20)',
+              borderRadius: 8,
+            }}>
+              ⚠ {deleteError}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              type="button"
+              onClick={() => { setDeleteStep('idle'); setDeleteError(null) }}
+              disabled={deleteStep === 'deleting'}
+              style={{
+                flex: 1, padding: '10px', borderRadius: 10,
+                fontSize: 12, fontWeight: 700,
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                color: 'rgba(255,255,255,0.55)',
+                cursor: deleteStep === 'deleting' ? 'wait' : 'pointer',
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteAccount}
+              disabled={deleteStep === 'deleting'}
+              style={{
+                flex: 1, padding: '10px', borderRadius: 10,
+                fontSize: 12, fontWeight: 700,
+                background: 'rgba(248,113,113,0.12)',
+                border: '1px solid rgba(248,113,113,0.35)',
+                color: '#F87171',
+                cursor: deleteStep === 'deleting' ? 'wait' : 'pointer',
+              }}
+            >
+              {deleteStep === 'deleting' ? 'Deleting…' : 'Delete My Account'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }
 

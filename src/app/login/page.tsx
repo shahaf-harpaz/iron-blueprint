@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
+import { seedUser } from '@/lib/seedUser'
 
 type Tab = 'signin' | 'signup'
 
@@ -65,13 +66,19 @@ export default function LoginPage() {
       if (error) setError(error.message)
       else window.location.href = '/'
     } else {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: { emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback` },
       })
-      if (error) setError(error.message)
-      else setSuccess('Account created! Check your email to confirm your address, then sign in.')
+      if (error) {
+        setError(error.message)
+      } else {
+        if (data.user) {
+          try { await seedUser(data.user.id) } catch (err) { console.error('SEED ERROR:', err) }
+        }
+        setSuccess('Account created! Check your email to confirm your address, then sign in.')
+      }
     }
     setLoading(false)
   }

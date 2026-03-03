@@ -1,7 +1,6 @@
 'use client'
 import { useState } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
-import { seedUser } from '@/lib/seedUser'
 
 type Tab = 'signin' | 'signup'
 
@@ -75,7 +74,11 @@ export default function LoginPage() {
         setError(error.message)
       } else {
         if (data.user) {
-          try { await seedUser(data.user.id) } catch (err) { console.error('SEED ERROR:', err) }
+          await fetch('/api/seed', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: data.user.id })
+          })
         }
         setSuccess('Account created! Check your email to confirm your address, then sign in.')
       }

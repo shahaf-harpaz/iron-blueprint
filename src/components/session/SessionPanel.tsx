@@ -32,6 +32,18 @@ export interface Exercise {
 
 type SetState = { weight: number; reps: number; rpe?: number; done: boolean }
 
+// ─── useIsMobile ─────────────────────────────────────────────────────────────
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+  return isMobile
+}
+
 // ─── REST TIMER ───────────────────────────────────────────────────────────────
 function RestTimer({
   exerciseName,
@@ -42,8 +54,9 @@ function RestTimer({
   setNum: number
   onDismiss: () => void
 }) {
-  const TOTAL = 90
+  const TOTAL    = 90
   const [sec, setSec] = useState(TOTAL)
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     if (sec <= 0) { onDismiss(); return }
@@ -62,18 +75,13 @@ function RestTimer({
           from { transform: translateY(16px) scale(0.96); opacity: 0; }
           to   { transform: translateY(0)    scale(1);    opacity: 1; }
         }
-        @media (max-width: 767px) {
-          .rest-timer-float {
-            bottom: 100px !important;
-            right: 16px !important;
-            left: 16px !important;
-            width: auto !important;
-            max-width: none !important;
-          }
-        }
       `}</style>
-      <div className="rest-timer-float" style={{
-        position: 'fixed', bottom: 24, right: 24, zIndex: 999,
+      <div style={{
+        position: 'fixed',
+        bottom:   isMobile ? 110 : 32,
+        right:    isMobile ? 16  : 32,
+        zIndex:   9999,
+        maxWidth: 'calc(100vw - 32px)',
         backdropFilter: 'blur(60px) saturate(200%)',
         WebkitBackdropFilter: 'blur(60px) saturate(200%)',
         background: 'rgba(200,255,0,0.10)',

@@ -41,7 +41,7 @@ const NAV = [
   },
 ]
 
-// Mobile dock — 3 items (Analytics + Architect live in avatar dropdown)
+// Mobile dock — 4 items
 const NAV_DOCK = [
   {
     href: '/', label: 'Dashboard',
@@ -50,6 +50,10 @@ const NAV_DOCK = [
   {
     href: '/architect', label: 'Blueprint',
     icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>,
+  },
+  {
+    href: '/analytics', label: 'Analytics',
+    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
   },
   {
     href: '/nutrition', label: 'Nutrition',
@@ -378,16 +382,16 @@ function MobileAvatarButton({ user, lightMode, toggleTheme, onSignOut, onDeleteR
           <DropDivider />
 
           <DropItem onClick={() => go('/')}>
-            <span>🏠</span><span>Home</span>
+            {NAV[0].icon}<span>Home</span>
           </DropItem>
           <DropItem onClick={() => go('/analytics')}>
-            <span>📊</span><span>Analytics</span>
+            {NAV[1].icon}<span>Analytics</span>
           </DropItem>
           <DropItem onClick={() => go('/nutrition')}>
-            <span>🥗</span><span>Nutrition</span>
+            {NAV[3].icon}<span>Nutrition</span>
           </DropItem>
           <DropItem onClick={() => go('/architect')}>
-            <span>⚙️</span><span>Architect</span>
+            {NAV[2].icon}<span>Architect</span>
           </DropItem>
 
           <DropDivider />

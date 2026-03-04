@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import { StepperInput } from '@/components/ui/StepperInput'
 
@@ -32,18 +33,6 @@ export interface Exercise {
 
 type SetState = { weight: number; reps: number; rpe?: number; done: boolean }
 
-// ─── useIsMobile ─────────────────────────────────────────────────────────────
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false)
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768)
-    check()
-    window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
-  }, [])
-  return isMobile
-}
-
 // ─── REST TIMER ───────────────────────────────────────────────────────────────
 function RestTimer({
   exerciseName,
@@ -54,9 +43,8 @@ function RestTimer({
   setNum: number
   onDismiss: () => void
 }) {
-  const TOTAL    = 90
+  const TOTAL = 90
   const [sec, setSec] = useState(TOTAL)
-  const isMobile = useIsMobile()
 
   useEffect(() => {
     if (sec <= 0) { onDismiss(); return }
@@ -68,7 +56,7 @@ function RestTimer({
   const r    = 36
   const circ = 2 * Math.PI * r
 
-  return (
+  return createPortal(
     <>
       <style>{`
         @keyframes timerIn {
@@ -78,8 +66,8 @@ function RestTimer({
       `}</style>
       <div style={{
         position: 'fixed',
-        bottom:   isMobile ? 110 : 32,
-        right:    isMobile ? 16  : 32,
+        bottom:   110,
+        right:    24,
         zIndex:   9999,
         maxWidth: 'calc(100vw - 32px)',
         backdropFilter: 'blur(60px) saturate(200%)',
@@ -124,7 +112,8 @@ function RestTimer({
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body,
   )
 }
 

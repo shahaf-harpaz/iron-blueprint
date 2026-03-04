@@ -153,6 +153,33 @@ One row per user per day. Managed by `useNutrition` hook.
 | protein_g / protein_consumed_g | integer | |
 | fat_g / fat_consumed_g | integer | |
 
+### `nutrition_targets`
+| Column | Type | Notes |
+|---|---|---|
+| user_id | uuid | PK, FK → auth.users |
+| kcal_goal | integer | Default 2500 |
+| protein_g | integer | Default 180 |
+| updated_at | timestamptz | |
+
+### `nutrition_days`
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid | PK |
+| user_id | uuid | FK → auth.users |
+| date | date | Unique per user — unique constraint on (user_id, date) |
+
+### `meals`
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid | PK |
+| user_id | uuid | FK → auth.users |
+| nutrition_day_id | uuid | FK → nutrition_days |
+| meal_type | text | breakfast / lunch / dinner / snack |
+| logged_at | time | Time of meal |
+| kcal | integer | |
+| protein_g | integer | |
+| notes | text | Optional |
+
 **RLS enabled on all tables.** Every insert into `workout_templates`, `exercises`, `template_exercises`, `workout_logs`, and `set_entries` must include `user_id: user.id`. Every select must include `.eq('user_id', user.id)`.
 
 ---

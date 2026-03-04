@@ -103,6 +103,8 @@ src/
 │   │   └── page.tsx            Analytics dashboard server component — fetches sets/logs/exercises, auth guard
 │   ├── architect/
 │   │   └── page.tsx            Client component — Architect: edit days, exercise library, assign exercises
+│   ├── nutrition/
+│   │   └── page.tsx            Client component — Nutrition: daily summary strip, month calendar, meal logging
 │   ├── test-backend/
 │   │   └── page.tsx            Dev-only: raw Supabase query tester
 │   └── workout/[id]/
@@ -260,3 +262,4 @@ Never use the `service_role` key in client-side code.
 | 2026-03-01 | CRITICAL: Fixed page.tsx using unauthenticated supabase client — switched to getSupabaseServerClient() with auth guard + user_id filter on set_entries; analytics Recent Sessions now shows per-exercise breakdown with sets + volume | src/app/page.tsx, analytics/page.tsx, AnalyticsDashboard.tsx |
 | 2026-03-03 | Fixed data scoping bug: exercises queries in Architect (ExercisesTab + ProgramTab) were missing .eq('user_id', user.id), leaking all users' exercises across accounts | architect/page.tsx |
 | 2026-03-03 | New user seeding: admin client, seedUser() called from auth callback (idempotent), backfill script; email in delete modal + avatar hover tooltip | admin.ts, seedUser.ts, auth/callback/route.ts, scripts/backfillUsers.ts, layout.tsx |
+| 2026-03-04 | feat: nutrition tracking — added nutrition_targets, nutrition_days, and meals tables with RLS. Built /nutrition page with calendar, daily summary strip, and meal logging. | nutrition/page.tsx, CLAUDE.md, ARCHITECTURE.md |

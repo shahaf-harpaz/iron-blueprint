@@ -64,13 +64,11 @@ function RestTimer({
         }
         @media (max-width: 767px) {
           .rest-timer-float {
-            bottom: auto !important;
-            right: auto !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-            width: calc(100vw - 48px) !important;
-            max-width: 320px !important;
+            bottom: 100px !important;
+            right: 16px !important;
+            left: 16px !important;
+            width: auto !important;
+            max-width: none !important;
           }
         }
       `}</style>
@@ -141,7 +139,7 @@ function SetRow({
 }) {
   return (
     <div style={{
-      display: 'flex', alignItems: 'flex-end', gap: 10,
+      display: 'flex', alignItems: 'center', gap: 10,
       padding: '11px 13px', borderRadius: 10,
       background: done ? 'rgba(200,255,0,0.04)' : 'rgba(255,255,255,0.02)',
       border: `1px solid ${done ? 'rgba(200,255,0,0.22)' : 'rgba(255,255,255,0.06)'}`,
@@ -149,7 +147,7 @@ function SetRow({
     }}>
       <span style={{
         fontSize: 10, color: C.dimLo, width: 16,
-        flexShrink: 0, paddingBottom: perSetLast ? 26 : 12, fontWeight: 700,
+        flexShrink: 0, fontWeight: 700,
       }}>
         {setIndex + 1}
       </span>
@@ -201,7 +199,7 @@ function SetRow({
         onClick={onLog}
         disabled={done || saving}
         style={{
-          width: 42, height: 40, borderRadius: 11, flexShrink: 0,
+          width: 42, height: 44, borderRadius: 11, flexShrink: 0,
           background: done ? 'rgba(200,255,0,0.12)' : 'rgba(255,255,255,0.06)',
           border: `1px solid ${done ? 'rgba(200,255,0,0.28)' : C.border}`,
           color: done ? C.accent : 'rgba(255,255,255,0.4)',

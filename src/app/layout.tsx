@@ -377,8 +377,14 @@ function MobileAvatarButton({ user, lightMode, toggleTheme, onSignOut, onDeleteR
 
           <DropDivider />
 
+          <DropItem onClick={() => go('/')}>
+            <span>🏠</span><span>Home</span>
+          </DropItem>
           <DropItem onClick={() => go('/analytics')}>
             <span>📊</span><span>Analytics</span>
+          </DropItem>
+          <DropItem onClick={() => go('/nutrition')}>
+            <span>🥗</span><span>Nutrition</span>
           </DropItem>
           <DropItem onClick={() => go('/architect')}>
             <span>⚙️</span><span>Architect</span>

@@ -102,7 +102,9 @@ src/
 │   ├── analytics/
 │   │   └── page.tsx            Analytics dashboard server component — fetches sets/logs/exercises, auth guard
 │   ├── architect/
-│   │   └── page.tsx            Client component — Architect: edit days, exercise library, assign exercises
+│   │   └── page.tsx            Client component — Architect: edit days (+ Add Day), exercise library, assign exercises with drag-drop reorder
+│   ├── integrations/
+│   │   └── page.tsx            Client component — Apple Health integration: sync token management, setup instructions, health data preview
 │   ├── nutrition/
 │   │   └── page.tsx            Client component — Nutrition: daily summary strip, month calendar, meal logging
 │   ├── test-backend/
@@ -263,3 +265,4 @@ Never use the `service_role` key in client-side code.
 | 2026-03-03 | Fixed data scoping bug: exercises queries in Architect (ExercisesTab + ProgramTab) were missing .eq('user_id', user.id), leaking all users' exercises across accounts | architect/page.tsx |
 | 2026-03-03 | New user seeding: admin client, seedUser() called from auth callback (idempotent), backfill script; email in delete modal + avatar hover tooltip | admin.ts, seedUser.ts, auth/callback/route.ts, scripts/backfillUsers.ts, layout.tsx |
 | 2026-03-04 | feat: nutrition tracking — added nutrition_targets, nutrition_days, and meals tables with RLS. Built /nutrition page with calendar, daily summary strip, and meal logging. | nutrition/page.tsx, CLAUDE.md, ARCHITECTURE.md |
+| 2026-03-05 | feat: Apple Health integration — edge function health-sync with token auth + health score formula; /integrations page with token mgmt + setup guide; home page shows real nutrition+health data; Integrations in nav; Delete Data in sidebar+mobile dropdown; drag-drop reorder in Architect ProgramTab; Add Day in DaysTab; removed Reset Logs from Architect | supabase/functions/health-sync/index.ts, integrations/page.tsx, page.tsx, layout.tsx, architect/page.tsx, ARCHITECTURE.md |

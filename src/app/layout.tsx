@@ -7,6 +7,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import { PageTransition } from '@/components/ui/PageTransition'
 import { deleteAccount } from '@/app/actions/deleteAccount'
+import { ResetLogsModal } from '@/components/ui/ResetLogsModal'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -38,6 +39,10 @@ const NAV = [
   {
     href: '/nutrition', label: 'Nutrition',
     icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>,
+  },
+  {
+    href: '/integrations', label: 'Integrations',
+    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>,
   },
 ]
 
@@ -82,11 +87,12 @@ interface NavProps {
   toggleTheme: () => void
   onSignOut: () => void
   onDeleteRequest: () => void
+  onDeleteData: () => void
 }
 
 // ─── Sidebar (desktop only) ───────────────────────────────────────────────────
 
-function Sidebar({ user, lightMode, toggleTheme, onSignOut, onDeleteRequest, isMobile }: NavProps & { isMobile: boolean }) {
+function Sidebar({ user, lightMode, toggleTheme, onSignOut, onDeleteRequest, onDeleteData, isMobile }: NavProps & { isMobile: boolean }) {
   const pathname = usePathname()
   const [showAvatarTip, setShowAvatarTip] = useState(false)
 
@@ -218,6 +224,26 @@ function Sidebar({ user, lightMode, toggleTheme, onSignOut, onDeleteRequest, isM
           }}
         >↪</button>
 
+        {/* Delete Data (reset workout logs) */}
+        <button
+          type="button"
+          onClick={onDeleteData}
+          title="Delete workout data"
+          style={{
+            width: 36, height: 36, borderRadius: 10, border: 'none',
+            background: 'transparent', cursor: 'pointer',
+            color: '#FB923C',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'color 0.15s',
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><line x1="17" y1="20" x2="17" y2="14"/>
+            <line x1="14" y1="17" x2="20" y2="17"/>
+          </svg>
+        </button>
+
         {/* Delete account */}
         <button
           type="button"
@@ -279,7 +305,7 @@ function DropItem({
   )
 }
 
-function MobileAvatarButton({ user, lightMode, toggleTheme, onSignOut, onDeleteRequest }: NavProps) {
+function MobileAvatarButton({ user, lightMode, toggleTheme, onSignOut, onDeleteRequest, onDeleteData }: NavProps) {
   const [open, setOpen]   = useState(false)
   const pathname          = usePathname()
   const router            = useRouter()
@@ -381,26 +407,29 @@ function MobileAvatarButton({ user, lightMode, toggleTheme, onSignOut, onDeleteR
 
           <DropDivider />
 
-          <DropItem onClick={() => go('/')}>
-            {NAV[0].icon}<span>Home</span>
-          </DropItem>
-          <DropItem onClick={() => go('/analytics')}>
-            {NAV[1].icon}<span>Analytics</span>
-          </DropItem>
-          <DropItem onClick={() => go('/nutrition')}>
-            {NAV[3].icon}<span>Nutrition</span>
-          </DropItem>
-          <DropItem onClick={() => go('/architect')}>
-            {NAV[2].icon}<span>Architect</span>
-          </DropItem>
+          {NAV.map(({ href, label, icon }) => (
+            <DropItem key={href} onClick={() => go(href)}>
+              {icon}<span>{label}</span>
+            </DropItem>
+          ))}
 
           <DropDivider />
 
+          <DropItem onClick={() => { setOpen(false); onDeleteData() }} color="#FB923C">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><line x1="17" y1="20" x2="17" y2="14"/>
+              <line x1="14" y1="17" x2="20" y2="17"/>
+            </svg>
+            <span>Delete Data</span>
+          </DropItem>
           <DropItem onClick={() => { setOpen(false); onSignOut() }} color="rgba(255,255,255,0.5)">
-            <span>🚪</span><span>Sign Out</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <span>Sign Out</span>
           </DropItem>
           <DropItem onClick={() => { setOpen(false); onDeleteRequest() }} color="#F87171">
-            <span>🗑️</span><span>Delete Account</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            <span>Delete Account</span>
           </DropItem>
         </div>
       )}
@@ -458,6 +487,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const [lightMode,   setLightMode]   = useState(false)
   const [deleteStep,  setDeleteStep]  = useState<'idle' | 'confirm' | 'deleting'>('idle')
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [showReset,   setShowReset]   = useState(false)
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient()
@@ -499,6 +529,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     toggleTheme,
     onSignOut:       signOut,
     onDeleteRequest: () => setDeleteStep('confirm'),
+    onDeleteData:    () => setShowReset(true),
   }
 
   return (
@@ -517,6 +548,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {children}
               </div>
             </PageTransition>
+
+            {/* Delete Data modal — shared by sidebar + mobile dropdown */}
+            <ResetLogsModal
+              isOpen={showReset}
+              onClose={() => setShowReset(false)}
+              onSuccess={() => { setShowReset(false); window.location.reload() }}
+            />
 
             {/* Delete account confirmation modal — shared by sidebar + mobile dropdown */}
             {deleteStep !== 'idle' && (

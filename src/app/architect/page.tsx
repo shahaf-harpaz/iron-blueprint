@@ -1,7 +1,6 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
-import { ResetLogsModal } from '@/components/ui/ResetLogsModal'
 
 // ─── TOKENS ───────────────────────────────────────────────────────────────────
 const C = {
@@ -38,35 +37,62 @@ const glassCard: React.CSSProperties = {
 
 // ─── DAYS TAB ─────────────────────────────────────────────────────────────────
 function DaysTab() {
-  const [templates, setTemplates] = useState<any[]>([])
-  const [editState, setEditState] = useState<Record<string, {
+  const [templates,    setTemplates]   = useState<any[]>([])
+  const [editState,    setEditState]   = useState<Record<string, {
     name:   string
     desc:   string
     saving: boolean
     saved:  boolean
     error:  string | null
   }>>({})
+  const [showAddDay,   setShowAddDay]  = useState(false)
+  const [newDayName,   setNewDayName]  = useState('')
+  const [addDaySaving, setAddDaySaving] = useState(false)
+  const [addDayError,  setAddDayError]  = useState<string | null>(null)
 
-  useEffect(() => {
-    ;(async () => {
-      const supabase = getSupabaseBrowserClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const { data } = await supabase
-        .from('workout_templates')
-        .select('id, day_number, name, description')
-        .eq('user_id', user.id)
-        .order('day_number')
-      if (data) {
-        setTemplates(data)
-        const init: typeof editState = {}
-        for (const t of data) {
-          init[t.id] = { name: t.name ?? '', desc: t.description ?? '', saving: false, saved: false, error: null }
-        }
-        setEditState(init)
+  const loadTemplates = async () => {
+    const supabase = getSupabaseBrowserClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data } = await supabase
+      .from('workout_templates')
+      .select('id, day_number, name, description')
+      .eq('user_id', user.id)
+      .order('day_number')
+    if (data) {
+      setTemplates(data)
+      const init: typeof editState = {}
+      for (const t of data) {
+        init[t.id] = { name: t.name ?? '', desc: t.description ?? '', saving: false, saved: false, error: null }
       }
-    })()
-  }, [])
+      setEditState(init)
+    }
+  }
+
+  useEffect(() => { loadTemplates() }, [])
+
+  const handleAddDay = async () => {
+    setAddDaySaving(true)
+    setAddDayError(null)
+    const supabase = getSupabaseBrowserClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setAddDaySaving(false); return }
+    const dayNumber = templates.length + 1
+    const { error } = await supabase.from('workout_templates').insert({
+      user_id:     user.id,
+      day_number:  dayNumber,
+      name:        newDayName.trim() || `Day ${dayNumber}`,
+      description: '',
+    })
+    if (error) {
+      setAddDayError(error.message)
+    } else {
+      setNewDayName('')
+      setShowAddDay(false)
+      await loadTemplates()
+    }
+    setAddDaySaving(false)
+  }
 
   const save = async (id: string) => {
     const s = editState[id]
@@ -87,12 +113,11 @@ function DaysTab() {
     }
   }
 
-  if (templates.length === 0) {
-    return <div style={{ color: C.dim, fontSize: 13 }}>Loading days…</div>
-  }
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {templates.length === 0 && !showAddDay && (
+        <div style={{ color: C.dim, fontSize: 13 }}>Loading days…</div>
+      )}
       {templates.map(t => {
         const es = editState[t.id]
         if (!es) return null
@@ -144,6 +169,66 @@ function DaysTab() {
           </div>
         )
       })}
+
+      {/* Add Day form */}
+      {showAddDay && (
+        <div style={glassCard}>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.dim, marginBottom: 12 }}>
+            New Day
+          </div>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 10, color: C.dim, marginBottom: 5 }}>Name</div>
+              <input
+                style={inputStyle}
+                value={newDayName}
+                onChange={e => setNewDayName(e.target.value)}
+                placeholder={`Day ${templates.length + 1}…`}
+                onKeyDown={e => { if (e.key === 'Enter') handleAddDay() }}
+                autoFocus
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleAddDay}
+              disabled={addDaySaving}
+              style={{
+                padding: '8px 18px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                background: C.accentDim, border: `1px solid ${C.accentBorder}`, color: C.accent,
+                opacity: addDaySaving ? 0.6 : 1, flexShrink: 0,
+              }}
+            >
+              {addDaySaving ? 'Adding…' : 'Add Day'}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowAddDay(false); setNewDayName(''); setAddDayError(null) }}
+              style={{
+                padding: '8px 14px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                background: 'transparent', border: `1px solid ${C.border}`, color: C.dim, flexShrink: 0,
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+          {addDayError && <div style={{ fontSize: 11, color: C.red, marginTop: 10 }}>⚠ {addDayError}</div>}
+        </div>
+      )}
+
+      {/* Add Day button */}
+      {!showAddDay && (
+        <button
+          type="button"
+          onClick={() => setShowAddDay(true)}
+          style={{
+            padding: '10px 18px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+            background: 'rgba(255,255,255,0.04)', border: `1px dashed ${C.border}`,
+            color: C.dim, display: 'flex', alignItems: 'center', gap: 8,
+          }}
+        >
+          <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> Add Day
+        </button>
+      )}
     </div>
   )
 }
@@ -516,12 +601,22 @@ function ExercisesTab() {
 // ─── EXERCISE IN DAY ROW ──────────────────────────────────────────────────────
 function ExerciseInDayRow({
   te,
+  index,
+  isDragOver,
   onRemove,
   onUpdateSets,
+  onDragStart,
+  onDragOver,
+  onDrop,
 }: {
   te: any
+  index: number
+  isDragOver: boolean
   onRemove: (id: string) => void
   onUpdateSets: (id: string, sets: number) => Promise<void>
+  onDragStart: (index: number) => void
+  onDragOver: (e: React.DragEvent, index: number) => void
+  onDrop: (index: number) => void
 }) {
   const ex = te.exercises as any
   const [sets, setSets]     = useState<number>(te.target_sets ?? 3)
@@ -535,16 +630,21 @@ function ExerciseInDayRow({
   }
 
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 10,
-      padding: '9px 12px', borderRadius: 10, marginBottom: 6,
-      background: 'rgba(255,255,255,0.03)',
-      border: '1px solid rgba(255,255,255,0.07)',
-    }}>
-      <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 14 }}>⠿</span>
-      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace', width: 16 }}>
-        {te.position}
-      </span>
+    <div
+      draggable
+      onDragStart={() => onDragStart(index)}
+      onDragOver={e => onDragOver(e, index)}
+      onDrop={() => onDrop(index)}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 10,
+        padding: '9px 12px', borderRadius: 10, marginBottom: 6,
+        background: isDragOver ? 'rgba(200,255,0,0.06)' : 'rgba(255,255,255,0.03)',
+        border: `1px solid ${isDragOver ? 'rgba(200,255,0,0.3)' : 'rgba(255,255,255,0.07)'}`,
+        transition: 'all 0.15s',
+        cursor: 'grab',
+      }}
+    >
+      <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 14, cursor: 'grab', flexShrink: 0 }}>⠿</span>
       <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: '#fff' }}>
         {ex?.name}
       </span>
@@ -559,11 +659,13 @@ function ExerciseInDayRow({
           onChange={e => setSets(Number(e.target.value))}
           onBlur={e => handleSetsChange(Number(e.target.value))}
           onKeyDown={e => { if (e.key === 'Enter') handleSetsChange(sets) }}
+          onClick={e => e.stopPropagation()}
           style={{
             width: 44, padding: '4px 6px', borderRadius: 7, textAlign: 'center',
             background: saving ? 'rgba(200,255,0,0.08)' : 'rgba(255,255,255,0.08)',
             border: `1px solid ${saving ? 'rgba(200,255,0,0.3)' : 'rgba(255,255,255,0.12)'}`,
             color: '#C8FF00', fontSize: 13, fontWeight: 800, outline: 'none',
+            cursor: 'text',
           }}
         />
       </div>
@@ -575,6 +677,7 @@ function ExerciseInDayRow({
           background: 'rgba(248,113,113,0.10)',
           color: '#F87171', fontSize: 13, cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
+          flexShrink: 0,
         }}
       >✕</button>
     </div>
@@ -591,6 +694,8 @@ function ProgramTab() {
   const [newSets, setNewSets]                       = useState(3)
   const [selectedExercise, setSelectedExercise]     = useState<any>(null)
   const [opError, setOpError]                       = useState<string | null>(null)
+  const dragIndexRef = useRef<number | null>(null)
+  const [dragOverIndex, setDragOverIndex]           = useState<number | null>(null)
 
   useEffect(() => {
     ;(async () => {
@@ -652,6 +757,35 @@ function ProgramTab() {
     if (!error && selectedTemplateId) {
       fetchTemplateExercises(selectedTemplateId)
     }
+  }
+
+  const handleDragStart = (index: number) => {
+    dragIndexRef.current = index
+  }
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    setDragOverIndex(index)
+  }
+
+  const handleDrop = async (dropIndex: number) => {
+    const dragIndex = dragIndexRef.current
+    setDragOverIndex(null)
+    dragIndexRef.current = null
+    if (dragIndex === null || dragIndex === dropIndex) return
+
+    const newOrder = [...templateExercises]
+    const [moved]  = newOrder.splice(dragIndex, 1)
+    newOrder.splice(dropIndex, 0, moved)
+    setTemplateExercises(newOrder)
+
+    // Persist new positions
+    const supabase = getSupabaseBrowserClient()
+    await Promise.all(
+      newOrder.map((te, i) =>
+        supabase.from('template_exercises').update({ position: i + 1 }).eq('id', te.id)
+      )
+    )
   }
 
   const addExercise = async (exercise: any) => {
@@ -723,12 +857,17 @@ function ProgramTab() {
               {templateExercises.length === 0 && (
                 <div style={{ fontSize: 12, color: C.dim, fontStyle: 'italic' }}>No exercises assigned to this day yet.</div>
               )}
-              {templateExercises.map(te => (
+              {templateExercises.map((te, i) => (
                 <ExerciseInDayRow
                   key={te.id}
                   te={te}
+                  index={i}
+                  isDragOver={dragOverIndex === i}
                   onRemove={removeExercise}
                   onUpdateSets={handleUpdateSets}
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
                 />
               ))}
             </div>
@@ -790,7 +929,6 @@ function ProgramTab() {
 // ─── ARCHITECT PAGE ───────────────────────────────────────────────────────────
 export default function ArchitectPage() {
   const [tab, setTab] = useState<'days' | 'exercises' | 'program'>('days')
-  const [showReset, setShowReset] = useState(false)
 
   const tabs: { id: 'days' | 'exercises' | 'program'; label: string }[] = [
     { id: 'days',      label: 'Days' },
@@ -833,19 +971,6 @@ export default function ArchitectPage() {
       {tab === 'days'      && <DaysTab />}
       {tab === 'exercises' && <ExercisesTab />}
       {tab === 'program'   && <ProgramTab />}
-
-      <ResetLogsModal
-        isOpen={showReset}
-        onClose={() => setShowReset(false)}
-        onSuccess={() => window.location.reload()}
-      />
-      <div style={{ padding: '24px', textAlign: 'center' }}>
-        <button onClick={() => setShowReset(true)} style={{
-          fontSize: 12, color: 'rgba(255,255,255,0.3)',
-          background: 'transparent', border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: 8, padding: '8px 16px', cursor: 'pointer',
-        }}>Reset logs</button>
-      </div>
     </div>
   )
 }

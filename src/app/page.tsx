@@ -27,6 +27,22 @@ const glass = {
   boxShadow: 'inset 0 0.5px 0 rgba(255,255,255,0.07), 0 20px 40px rgba(0,0,0,0.4)',
 }
 
+function HealthChip({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 8,
+      padding: '7px 14px', borderRadius: 999,
+      background: 'rgba(255,255,255,0.04)',
+      border: '1px solid rgba(255,255,255,0.08)',
+      flexShrink: 0,
+    }}>
+      <div style={{ width: 6, height: 6, borderRadius: '50%', background: color, flexShrink: 0 }} />
+      <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>{value}</div>
+      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: C.dim }}>{label}</div>
+    </div>
+  )
+}
+
 function MacroRing({ label, value, max, unit, color }: {
   label: string; value: number; max: number; unit: string; color: string
 }) {
@@ -138,8 +154,35 @@ export default async function Dashboard() {
     day_number:  t.day_number,
   }))
 
+  // ── 4. Today's nutrition ───────────────────────────────────────────────────
+  const today = new Date().toLocaleDateString('en-CA')
+
+  const [{ data: nutTargets }, { data: todayDay }, { data: healthToday }] = await Promise.all([
+    supabase.from('nutrition_targets').select('kcal_goal, protein_g').eq('user_id', user.id).single(),
+    supabase.from('nutrition_days').select('id').eq('user_id', user.id).eq('date', today).single(),
+    supabase.from('health_sync').select('health_score, steps, sleep_hours, hrv, active_calories, stand_hours').eq('user_id', user.id).eq('date', today).maybeSingle(),
+  ])
+
+  let kcalConsumed = 0
+  let proteinConsumed = 0
+  if (todayDay?.id) {
+    const { data: todayMeals } = await supabase
+      .from('meals')
+      .select('kcal, protein_g')
+      .eq('nutrition_day_id', todayDay.id)
+      .eq('user_id', user.id)
+    for (const meal of (todayMeals ?? []) as any[]) {
+      kcalConsumed    += meal.kcal      ?? 0
+      proteinConsumed += meal.protein_g ?? 0
+    }
+  }
+
   const dateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
-  const macros  = { kcal: { v: 1840, max: 2850 }, protein: { v: 142, max: 210 }, steps: { v: 9200, max: 14000 } }
+  const macros  = {
+    kcal:    { v: kcalConsumed,                  max: nutTargets?.kcal_goal ?? 2500 },
+    protein: { v: Math.round(proteinConsumed),   max: nutTargets?.protein_g ?? 180  },
+    health:  { v: healthToday?.health_score ?? 0, max: 100 },
+  }
 
   return (
     <div>
@@ -158,19 +201,29 @@ export default async function Dashboard() {
 
       {/* ── NUTRITION STRIP ── */}
       <div style={{ ...glass, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 20, marginBottom: 24, overflowX: 'auto' }}>
-        <MacroRing label="Calories" value={macros.kcal.v}     max={macros.kcal.max}     unit="kcal" color={C.accent} />
+        <MacroRing label="Calories" value={macros.kcal.v}    max={macros.kcal.max}    unit="kcal" color={C.accent} />
         <div style={{ width: 1, height: 40, background: C.border, flexShrink: 0 }} />
-        <MacroRing label="Protein"  value={macros.protein.v}  max={macros.protein.max}  unit="g"    color={C.blue} />
+        <MacroRing label="Protein"  value={macros.protein.v} max={macros.protein.max} unit="g"    color={C.blue} />
         <div style={{ width: 1, height: 40, background: C.border, flexShrink: 0 }} />
-        <MacroRing label="Steps"    value={macros.steps.v}    max={macros.steps.max}    unit="k"    color={C.purple} />
+        <MacroRing label="Health"   value={macros.health.v}  max={macros.health.max}  unit=""     color={C.purple} />
         <div style={{ marginLeft: 'auto', flexShrink: 0, textAlign: 'right' }}>
           <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.dim }}>Remaining</div>
           <div style={{ fontSize: 22, fontWeight: 900, color: C.accent, letterSpacing: '-0.03em', marginTop: 2 }}>
-            {macros.kcal.max - macros.kcal.v}
+            {Math.max(0, macros.kcal.max - macros.kcal.v)}
           </div>
           <div style={{ fontSize: 9, color: C.dim, fontWeight: 600 }}>kcal left</div>
         </div>
       </div>
+
+      {/* ── HEALTH CHIPS ── */}
+      {healthToday && (
+        <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
+          <HealthChip label="Steps"      value={(healthToday.steps ?? 0).toLocaleString()} color={C.blue} />
+          <HealthChip label="Sleep"      value={`${healthToday.sleep_hours ?? 0}h`}         color={C.purple} />
+          <HealthChip label="HRV"        value={`${healthToday.hrv ?? 0}ms`}                color="#34D399" />
+          <HealthChip label="Active Cal" value={`${healthToday.active_calories ?? 0}`}      color={C.accent} />
+        </div>
+      )}
 
       {/* ── WEEKLY PROGRAM (client component) ── */}
       <WeeklyProgram
